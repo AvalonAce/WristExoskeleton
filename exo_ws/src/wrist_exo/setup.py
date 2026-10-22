@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='rahilyn',
     maintainer_email='rsolyzia@outlook.com',
-    description='TODO: Package description',
+    description='Wrist exoskeleton ROS 2 nodes',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'csv_logger = wrist_exo.csv_logger:main',
         ],
     },
 )

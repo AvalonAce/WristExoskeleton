@@ -3,12 +3,14 @@
 <package format="3">
   <name>wrist_exo</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Wrist exoskeleton ROS 2 nodes</description>
   <maintainer email="rsolyzia@outlook.com">rahilyn</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>wrist_exo_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
