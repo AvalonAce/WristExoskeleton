@@ -16,7 +16,7 @@
 #define IMU_HAND_ADDR     0x69
 #define IMU_FOREARM_ADDR  0x68
 #define IMU_PUBLISH_HZ    100
-#define I2C_CLOCK_HZ      400000
+#define I2C_CLOCK_HZ      100000  // scanner found both IMUs at 100 kHz; raise to 400k once stable
 
 // ---- micro-ROS ----
 #define NODE_NAME         "wrist_exo_mcu"

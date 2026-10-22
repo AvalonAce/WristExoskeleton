@@ -1,7 +1,18 @@
+# ROS 2 / colcon
 build/
 install/
 log/
 __pycache__/
 *.pyc
-.vscode/
 rosbag2_*/
+
+# PlatformIO
+.pio/
+
+# local envs / editors
+.venv/
+.vscode/
+
+# recorded data (lives in ~/exo_runs, not the repo)
+exo_runs/
+*.png

@@ -217,8 +217,8 @@ void setup() {
 #if defined(PIN_I2C_POWER)
   pinMode(PIN_I2C_POWER, OUTPUT);  // powers the STEMMA QT port on the Feather
   digitalWrite(PIN_I2C_POWER, HIGH);
-  delay(10);
 #endif
+  delay(100);  // ICM-20948 needs >=11 ms after power-up before registers respond
   Wire.begin();
   Wire.setClock(I2C_CLOCK_HZ);
   imu_hand_ok = setupImu(imu_hand, IMU_HAND_ADDR);
