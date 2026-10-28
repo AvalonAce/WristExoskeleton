@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'csv_logger = wrist_exo.csv_logger:main',
+            'wrist_state = wrist_exo.wrist_state:main',
         ],
     },
 )
