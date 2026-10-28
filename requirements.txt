@@ -1,0 +1,4 @@
+# analysis/plot_run.py (host side, any OS)
+pandas>=2.0
+matplotlib>=3.8
+numpy>=1.26
