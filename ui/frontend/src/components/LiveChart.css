@@ -1,0 +1,7 @@
+.lc + .lc { margin-top: var(--s5); }
+.lc-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s1); }
+.lc-title { font-weight: 600; font-size: var(--t-sm); }
+.lc-keys { display: flex; gap: var(--s4); font-size: var(--t-xs); color: var(--slate); }
+.lc-key { display: inline-flex; align-items: center; gap: 6px; }
+.lc-key i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.lc-plot { width: 100%; min-width: 0; }

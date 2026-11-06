@@ -1,0 +1,31 @@
+/* Placeholder styling for step 1. The real visual design comes in step 2. */
+:root {
+  --bg: #f6f7f9;
+  --fg: #1d232b;
+  --muted: #6b7380;
+  --line: #dde1e6;
+  --accent: #2f6fb0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+body { margin: 0; }
+.topbar {
+  display: flex; align-items: center; gap: 24px;
+  padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--line);
+}
+.brand { font-weight: 700; }
+.topbar nav { display: flex; gap: 16px; }
+.topbar a { color: var(--muted); text-decoration: none; }
+.topbar a.active { color: var(--accent); font-weight: 600; }
+.badge {
+  margin-left: auto; font-size: 12px; padding: 2px 8px; border-radius: 999px;
+  background: #fff4d6; color: #7a5600;
+}
+main { padding: 24px; max-width: 1100px; }
+table { border-collapse: collapse; width: 100%; background: #fff; margin-top: 12px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; font-size: 13px; }
+.readout { display: grid; grid-template-columns: 140px 1fr; gap: 6px 12px; font-variant-numeric: tabular-nums; }
+.readout dt { color: var(--muted); }
+.readout dd { margin: 0; font-weight: 600; }

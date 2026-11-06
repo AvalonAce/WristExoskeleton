@@ -1,0 +1,13 @@
+.tc { width: 100%; height: auto; display: block; }
+.tc-grid { stroke: var(--bone); stroke-width: 1; }
+.tc-axis { fill: var(--slate); font-size: 12px; }
+.tc-goal { stroke-width: 1.5; stroke-dasharray: 5 5; }
+.tc-goal--flex { stroke: var(--flex); }
+.tc-goal--ext { stroke: var(--ext); }
+.tc-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+.tc-line--flex { stroke: var(--flex); }
+.tc-line--ext { stroke: var(--ext); }
+.tc-dot { stroke: var(--surface); stroke-width: 2; }
+.tc-dot--flex { fill: var(--flex); }
+.tc-dot--ext { fill: var(--ext); }
+.tc-empty { color: var(--slate); font-size: var(--t-sm); padding: var(--s5) 0; }

@@ -1,0 +1,35 @@
+.ra { margin: 0; max-width: 100%; }
+.ra svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.ra-track { fill: none; stroke: var(--hairline); stroke-width: 14; stroke-linecap: round; }
+.ra-tick { stroke: var(--hairline); stroke-width: 1.5; }
+.ra-tick--major { stroke: var(--slate); }
+.ra-label { fill: var(--slate); font-size: 12px; }
+.ra-end { fill: var(--slate); font-size: 13px; }
+
+.ra-fill { fill: none; stroke-width: 14; stroke-linecap: round; }
+.ra-fill--flex { stroke: var(--flex); }
+.ra-fill--ext { stroke: var(--ext); }
+
+.ra-goal { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
+.ra-max { stroke-width: 2; stroke-dasharray: 3 3; }
+.ra-max--flex { stroke: var(--flex); }
+.ra-max--ext { stroke: var(--ext); }
+
+.ra-knob { stroke: #fff; stroke-width: 3; fill: var(--ink); }
+.ra-knob--flexion { fill: var(--flex); }
+.ra-knob--extension { fill: var(--ext); }
+
+.ra-readout { fill: var(--ink); font-size: 72px; font-weight: 600; letter-spacing: -0.03em; }
+.ra-readout--none { fill: var(--hairline); }
+.ra-dir { font-size: 15px; font-weight: 600; fill: var(--slate); }
+.ra-dir--flexion { fill: var(--flex-ink); }
+.ra-dir--extension { fill: var(--ext-ink); }
+
+.ra-caption { margin-top: var(--s2); text-align: center; color: var(--slate); font-size: var(--t-sm); }
+
+/* Loading-screen draw-in: track draws left to right, then ticks settle in. */
+.ra--intro .ra-track { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ra-draw 1.1s var(--ease-out) forwards; }
+.ra--intro .ra-ticks { opacity: 0; animation: ra-fade 0.5s ease 0.8s forwards; }
+@keyframes ra-draw { to { stroke-dashoffset: 0; } }
+@keyframes ra-fade { to { opacity: 1; } }

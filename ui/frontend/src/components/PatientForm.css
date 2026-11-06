@@ -1,0 +1,33 @@
+.pf { display: flex; flex-direction: column; gap: var(--s4); }
+.pf-row { display: flex; gap: var(--s4); flex-wrap: wrap; }
+.pf-row > * { flex: 1 1 160px; }
+.pf-code { flex: 0 1 150px !important; }
+.pf-field { display: flex; flex-direction: column; gap: 6px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.pf-field > span:first-child, .pf-field legend { font-size: var(--t-sm); font-weight: 600; padding: 0; margin-bottom: 6px; }
+.pf-field legend + * { margin-top: 0; }
+.pf input, .pf textarea {
+  font: inherit; color: var(--ink); width: 100%;
+  padding: 11px 14px; background: var(--bone); border: 1px solid transparent; border-radius: var(--r-control);
+}
+.pf textarea { resize: vertical; }
+.pf input:focus-visible, .pf textarea:focus-visible { outline: 2px solid var(--flex); outline-offset: 0; background: #fff; }
+.pf input[aria-invalid='true'] { border-color: var(--signal); }
+.pf-err { font-size: var(--t-sm); color: var(--signal-ink); }
+.pf-unit { position: relative; display: block; }
+.pf-unit i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: var(--t-sm); color: var(--slate); pointer-events: none; }
+.pf-unit input { padding-right: 76px; }
+.pf-actions { display: flex; justify-content: flex-end; gap: var(--s3); }
+.pf-actions .btn { border-radius: var(--r-item); }
+
+/* segmented choice */
+.seg { display: inline-flex; gap: 4px; padding: 4px; background: var(--bone); border-radius: var(--r-item); }
+.seg--wide { display: flex; }
+.seg--wide button { flex: 1; }
+.seg button {
+  font: inherit; font-size: var(--t-sm); font-weight: 500; color: var(--slate); cursor: pointer;
+  border: 0; background: transparent; padding: 8px 18px; border-radius: var(--r-control);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.seg button:hover { color: var(--ink); }
+.seg button.is-on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(27 42 58 / 0.12); }
+.seg small { font-size: var(--t-xs); color: var(--slate); font-weight: 400; }

@@ -1,0 +1,43 @@
+.boot {
+  min-height: 100vh; display: grid; place-items: center;
+  padding: var(--s6) var(--s4);
+}
+.boot-inner {
+  display: grid; grid-template-columns: auto minmax(260px, 340px);
+  align-items: center; gap: var(--s8); width: 100%; max-width: 920px;
+}
+.boot-title { font-size: var(--t-2xl); }
+.boot-sub { color: var(--slate); margin-top: var(--s1); min-height: 1.5em; }
+
+.boot-checks { list-style: none; margin: var(--s6) 0 0; padding: 0; }
+.boot-check {
+  display: grid; grid-template-columns: 20px 1fr auto; align-items: center;
+  column-gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--hairline);
+}
+.boot-check:last-child { border-bottom: 1px solid var(--hairline); }
+.boot-label { font-weight: 500; }
+.boot-state { font-size: var(--t-sm); color: var(--slate); }
+
+/* status mark: empty ring -> spinning arc -> filled dot */
+.boot-mark { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--hairline); }
+.boot-check--waiting .boot-label { color: var(--slate); }
+.boot-check--checking .boot-mark {
+  border-color: var(--hairline); border-top-color: var(--ink);
+  animation: boot-spin 0.8s linear infinite;
+}
+.boot-check--ready .boot-mark { border-color: var(--flex); background: var(--flex); }
+.boot-check--ready .boot-state { color: var(--flex-ink); }
+.boot-check--problem .boot-mark { border-color: var(--signal); background: var(--signal); }
+.boot-check--problem .boot-state { color: var(--signal-ink); font-weight: 600; }
+.boot-fix {
+  grid-column: 2 / -1; margin-top: var(--s2); padding: var(--s2) var(--s3);
+  background: var(--signal-wash); border-radius: var(--r-control); font-size: var(--t-sm);
+}
+@keyframes boot-spin { to { transform: rotate(360deg); } }
+
+.boot-actions { display: flex; gap: var(--s3); margin-top: var(--s5); flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .boot-inner { grid-template-columns: 1fr; gap: var(--s5); justify-items: start; }
+  .boot-inner .ra { width: 100% !important; }
+}

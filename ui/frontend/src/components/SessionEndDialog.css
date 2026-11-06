@@ -1,0 +1,16 @@
+.sed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s3); margin: 0; }
+.sed-grid > div { background: var(--bone); border-radius: var(--r-item); padding: var(--s3) var(--s4); }
+.sed-grid dt { font-size: var(--t-sm); color: var(--slate); }
+.sed-grid dd { margin: 2px 0 0; font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.01em; }
+.sed-grid dd small { font-size: var(--t-sm); font-weight: 400; color: var(--slate); letter-spacing: 0; }
+.sed-grid dd.flex { color: var(--flex-ink); }
+.sed-grid dd.ext { color: var(--ext-ink); }
+.sed-notes { display: flex; flex-direction: column; gap: 6px; margin-top: var(--s4); }
+.sed-notes span { font-size: var(--t-sm); font-weight: 600; }
+.sed-notes textarea {
+  font: inherit; color: var(--ink); resize: vertical; padding: 11px 14px;
+  background: var(--bone); border: 0; border-radius: var(--r-control);
+}
+.sed-warn { font-size: var(--t-sm); color: var(--ext-ink); align-self: center; }
+.btn--danger { background: var(--ext-ink); border-color: var(--ext-ink); }
+.btn--danger:hover { background: #87204f; }

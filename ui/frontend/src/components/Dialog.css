@@ -1,0 +1,25 @@
+.dlg-backdrop {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: var(--s4);
+  background: rgb(27 42 58 / 0.32); animation: dlg-fade 0.16s ease-out;
+}
+.dlg {
+  width: 100%; max-height: calc(100vh - 2 * var(--s4)); overflow: auto;
+  background: var(--surface); border-radius: var(--r-panel); outline: none;
+  animation: dlg-rise 0.2s var(--ease-out);
+}
+.dlg-head { display: flex; align-items: center; justify-content: space-between; padding: var(--s5) var(--s5) 0; }
+.dlg-head h2 { font-size: var(--t-lg); }
+.dlg-x {
+  font: inherit; font-size: 22px; line-height: 1; width: 36px; height: 36px; border-radius: 50%;
+  border: 0; background: transparent; color: var(--slate); cursor: pointer;
+}
+.dlg-x:hover { background: var(--bone); color: var(--ink); }
+.dlg-body { padding: var(--s4) var(--s5) var(--s5); }
+.dlg-foot {
+  display: flex; justify-content: flex-end; gap: var(--s3); flex-wrap: wrap;
+  padding: var(--s4) var(--s5) var(--s5); border-top: 1px solid var(--bone);
+}
+.dlg-foot .btn { border-radius: var(--r-item); }
+.dlg-foot .spacer { margin-right: auto; }
+@keyframes dlg-fade { from { opacity: 0; } }
+@keyframes dlg-rise { from { opacity: 0; transform: translateY(8px) scale(0.99); } }

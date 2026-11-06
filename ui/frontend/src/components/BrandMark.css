@@ -1,0 +1,29 @@
+.bm { display: block; max-width: 100%; height: auto; }
+.bm-body { fill: var(--ink); }
+.bm-band { fill: #556674; }
+.bm-signal { fill: var(--flex); }
+
+/* One 2.8 s cycle: signal draws (0-20%), hand flexes (36-46%), back, extends (74%), back. */
+.bm--run .bm-hand {
+  transform-box: view-box; transform-origin: 505px 835px;
+  animation: bm-hand 2.8s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+}
+.bm--run .bm-reveal {
+  transform-box: view-box; transform-origin: 360px 800px;
+  animation: bm-reveal 2.8s linear infinite;
+}
+.bm--run .bm-signal { animation: bm-fade 2.8s linear infinite; }
+
+@keyframes bm-hand {
+  0%, 18% { transform: rotate(0); }
+  36%, 46% { transform: rotate(12deg); }
+  60% { transform: rotate(0); }
+  74% { transform: rotate(-9deg); }
+  88%, 100% { transform: rotate(0); }
+}
+@keyframes bm-reveal { 0% { transform: scaleX(0); } 20%, 100% { transform: scaleX(1); } }
+@keyframes bm-fade { 0%, 80% { opacity: 1; } 95%, 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bm--run .bm-hand, .bm--run .bm-reveal, .bm--run .bm-signal { animation: none !important; }
+}

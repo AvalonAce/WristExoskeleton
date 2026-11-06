@@ -1,0 +1,28 @@
+.ssf-steps { list-style: none; margin: 0 0 var(--s5); padding: 0; display: flex; gap: var(--s2); flex-wrap: wrap; }
+.ssf-steps li {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  font-size: var(--t-sm); color: var(--slate); padding: 6px 14px 6px 6px;
+  background: var(--bone); border-radius: var(--r-pill);
+}
+.ssf-num {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); font-size: var(--t-xs); font-weight: 600;
+}
+.ssf-steps li.is-now { background: var(--ink); color: #fff; }
+.ssf-steps li.is-now .ssf-num { color: var(--ink); }
+.ssf-steps li.is-done { color: var(--flex-ink); }
+.ssf-steps li.is-done .ssf-num { background: var(--flex); color: #fff; }
+
+.ssf-pane { display: flex; flex-direction: column; gap: var(--s4); min-height: 230px; }
+.ssf-lead { font-size: var(--t-md); }
+.ssf-label { font-size: var(--t-sm); font-weight: 600; }
+.ssf-hint { font-size: var(--t-sm); color: var(--signal-ink); }
+.ssf-notes textarea {
+  font: inherit; color: var(--ink); width: 100%; resize: vertical;
+  padding: 11px 14px; background: var(--bone); border: 0; border-radius: var(--r-control);
+}
+
+.ssf-base { height: 14px; background: var(--bone); border-radius: var(--r-pill); overflow: hidden; }
+.ssf-base > div { height: 100%; background: var(--flex); border-radius: var(--r-pill); transition: width 0.1s linear; }
+.ssf-base-meta { display: flex; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; font-size: var(--t-sm); color: var(--slate); }
+.apf-lead { margin-bottom: var(--s4); }

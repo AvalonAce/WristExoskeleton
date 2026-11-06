@@ -1,0 +1,35 @@
+.start { min-height: 100vh; display: grid; place-items: center; padding: var(--s6) var(--s4); }
+.start-inner {
+  display: grid; grid-template-columns: auto minmax(280px, 360px);
+  align-items: center; gap: var(--s8); width: 100%; max-width: 940px;
+}
+.start-mark { display: flex; justify-content: center; }
+.start-side { min-height: 340px; display: flex; flex-direction: column; justify-content: center; }
+.start-title { font-size: var(--t-2xl); }
+.start-sub { color: var(--slate); margin-top: var(--s1); min-height: 1.5em; }
+.start-actions { display: flex; gap: var(--s3); margin-top: var(--s5); flex-wrap: wrap; }
+
+/* ---- sign in ---- */
+.signin { display: flex; flex-direction: column; }
+.signin .start-sub { margin-bottom: var(--s5); }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s4); }
+.field-label { font-size: var(--t-sm); font-weight: 600; }
+.field input {
+  font: inherit; color: var(--ink); background: #fff;
+  padding: 12px 14px; border: 1px solid var(--hairline); border-radius: var(--r-control);
+}
+.field input:focus-visible { outline: 2px solid var(--flex); outline-offset: 0; border-color: transparent; }
+.field input[aria-invalid='true'] { border-color: var(--signal); }
+.field-err { font-size: var(--t-sm); color: var(--signal-ink); }
+.signin-btn { justify-content: center; padding: 13px 18px; margin-top: var(--s2); font-size: var(--t-md); }
+.signin-btn:disabled { opacity: 0.7; cursor: progress; }
+.signin-note { margin-top: var(--s4); font-size: var(--t-sm); color: var(--slate); }
+
+/* ---- connect checks (styles live in SensorChecklist.css) ---- */
+.start-side .checks { margin-top: var(--s6); }
+
+@media (max-width: 760px) {
+  .start-inner { grid-template-columns: 1fr; gap: var(--s4); }
+  .start-mark { display: flex; justify-content: center; }
+.start-side { min-height: 0; }
+}

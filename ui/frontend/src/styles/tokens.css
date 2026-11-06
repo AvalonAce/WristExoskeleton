@@ -1,0 +1,66 @@
+/* Design tokens. Flexion = kinesio cyan, extension = kinesio magenta, everywhere. */
+:root {
+  /* color */
+  --bone: #eef1f3;          /* page background */
+  --paper: #f8fafb;         /* quiet fills */
+  --surface: #ffffff;       /* panels */
+  --ink: #1b2a3a;           /* text, primary buttons */
+  --slate: #5e6b78;         /* secondary text, axes */
+  --hairline: #d6dce1;      /* arc track, dividers */
+  --flex: #0e8fb0;          /* flexion: graphics, large text */
+  --flex-ink: #0b6f8a;      /* flexion: small text (AA on bone) */
+  --flex-wash: #dcedf2;
+  --ext: #c2387a;           /* extension: graphics, large text */
+  --ext-ink: #a12a63;       /* extension: small text (AA on bone) */
+  --ext-wash: #f5e1ea;
+  --signal: #d99a00;        /* sensor warnings only */
+  --signal-ink: #8a6200;
+  --signal-wash: #fbefcc;
+
+  /* type: one family, scale ~1.25 */
+  --font: 'Schibsted Grotesk Variable', system-ui, sans-serif;
+  --t-xs: 0.8125rem;  /* 13 */
+  --t-sm: 0.875rem;   /* 14 */
+  --t-md: 1rem;       /* 16 */
+  --t-lg: 1.25rem;    /* 20 */
+  --t-xl: 1.5625rem;  /* 25 */
+  --t-2xl: 1.9375rem; /* 31 */
+  --t-display: 4.5rem;/* 72, the arc readout */
+
+  /* space (4 px base) */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+
+  /* shape: radius by hierarchy, not one value everywhere */
+  --r-control: 10px;  /* inputs, buttons */
+  --r-item: 14px;     /* list items inside panels */
+  --r-panel: 24px;    /* panels */
+  --r-pill: 999px;
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-family: var(--font); color: var(--ink); background: var(--bone); }
+body { margin: 0; font-size: var(--t-md); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; line-height: 1.15; font-weight: 650; letter-spacing: -0.01em; }
+p { margin: 0; }
+
+.num { font-variant-numeric: tabular-nums; }
+
+:focus-visible { outline: 2px solid var(--flex); outline-offset: 2px; border-radius: 4px; }
+
+.btn {
+  font: inherit; font-size: var(--t-sm); font-weight: 600;
+  display: inline-flex; align-items: center; gap: var(--s2);
+  padding: 10px 18px; border-radius: var(--r-control); cursor: pointer;
+  border: 1px solid var(--ink); background: var(--ink); color: #fff;
+}
+.btn:hover:not(:disabled) { background: #24384d; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn--quiet { background: transparent; color: var(--ink); border-color: var(--hairline); }
+.btn--quiet:hover:not(:disabled) { background: var(--paper); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
