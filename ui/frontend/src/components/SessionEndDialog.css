@@ -14,3 +14,9 @@
 .sed-warn { font-size: var(--t-sm); color: var(--ext-ink); align-self: center; }
 .btn--danger { background: var(--ext-ink); border-color: var(--ext-ink); }
 .btn--danger:hover { background: #87204f; }
+.sed-sets { width: 100%; border-collapse: collapse; margin-top: var(--s4); font-size: var(--t-sm); }
+.sed-sets th { text-align: left; color: var(--slate); font-weight: 600; padding: 6px 8px; }
+.sed-sets td { padding: 8px; border-top: 1px solid var(--bone); }
+.sed-sets td.flex { color: var(--flex-ink); font-weight: 600; }
+.sed-sets td.ext { color: var(--ext-ink); font-weight: 600; }
+.sed-empty { margin-top: var(--s4); color: var(--slate); font-size: var(--t-sm); }

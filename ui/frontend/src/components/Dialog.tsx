@@ -15,13 +15,22 @@ interface Props {
 
 export default function Dialog({ title, onClose, children, footer, locked = false, width = 520 }: Props) {
   const panel = useRef<HTMLDivElement>(null);
+  // Parents re-render often (live data at 30 Hz) and pass a new onClose each time. Keep the
+  // latest callbacks in refs so the open/focus effect runs once, on mount only; re-running it
+  // would yank focus and scroll back to the top on every render.
+  const onCloseRef = useRef(onClose);
+  const lockedRef = useRef(locked);
+  onCloseRef.current = onClose;
+  lockedRef.current = locked;
 
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     const el = panel.current!;
-    (el.querySelector<HTMLElement>('[autofocus], input, select, textarea, button') ?? el).focus();
+    // First field in the body, else the panel itself (never the close button).
+    (el.querySelector<HTMLElement>('.dlg-body [autofocus], .dlg-body input, .dlg-body select, .dlg-body textarea') ?? el)
+      .focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !locked) onClose();
+      if (e.key === 'Escape' && !lockedRef.current) onCloseRef.current();
       if (e.key !== 'Tab') return;
       const f = [...el.querySelectorAll<HTMLElement>('button, input, select, textarea, [tabindex="0"]')]
         .filter((x) => !x.hasAttribute('disabled'));
@@ -30,8 +39,8 @@ export default function Dialog({ title, onClose, children, footer, locked = fals
       else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
     };
     document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('keydown', onKey); opener?.focus(); };
-  }, [onClose, locked]);
+    return () => { document.removeEventListener('keydown', onKey); opener?.focus({ preventScroll: true }); };
+  }, []);
 
   return createPortal(
     <div className="dlg-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget && !locked) onClose(); }}>

@@ -43,7 +43,15 @@ Demo patients are fictional. Real patient data must never be committed.
 
 ## Hooking up the real exo (live mode)
 
-One-time: `sudo apt install ros-jazzy-rosbridge-suite`
+One-time:
+
+```bash
+sudo apt install ros-jazzy-rosbridge-suite
+# installing rosbridge can leave ROS packages at mixed versions ("undefined symbol ... fastcdr"):
+sudo apt update && sudo apt install --only-upgrade -y 'ros-jazzy-*'
+# run the Docker agent without sudo (log out and back in afterwards):
+sudo usermod -aG docker $USER
+```
 
 Terminals (each: `source ~/development/WR26/WristExoskeleton/exo_ws/install/setup.bash` first;
 rosbridge in particular must have the workspace sourced or it cannot decode EmgBatch/WristState):

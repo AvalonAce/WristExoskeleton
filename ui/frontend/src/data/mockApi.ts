@@ -1,6 +1,6 @@
 // In-browser stand-in for the backend. Seeded with fictional demo patients.
 // Edits are kept in localStorage so they survive a page refresh (best effort only).
-import type { ExoApi, NewPatient, Patient, Session, SessionSummary } from './types';
+import type { ExoApi, NewPatient, Patient, Session, SessionSet, SessionSummary } from './types';
 
 const KEY = 'wrist-exo-mock-v2'; // bump when the seed changes so old demo data is replaced
 
@@ -118,13 +118,14 @@ export class MockApi implements ExoApi {
     return delay(s);
   }
 
-  stopSession(sessionId: string, result: { summary: SessionSummary; notes: string }) {
+  stopSession(sessionId: string, result: { summary: SessionSummary; notes: string; sets?: SessionSet[] }) {
     const s = this.db.sessions.find((x) => x.id === sessionId);
     if (!s) return Promise.reject(new Error(`No session ${sessionId}`));
     s.endedAt = new Date().toISOString();
     // The UI cannot measure onset lead; the mock fills in a plausible value.
     s.summary = { ...result.summary, meanOnsetLeadMs: result.summary.meanOnsetLeadMs ?? 118 };
     s.notes = result.notes;
+    if (result.sets) s.sets = result.sets;
     this.save();
     return delay({ ...s });
   }

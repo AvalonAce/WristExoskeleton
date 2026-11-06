@@ -38,9 +38,29 @@ export const STATUS_NAMES: Record<number, string> = {
   8: 'Extensor EMG saturated',
 };
 
+// The exo resists one direction per set; the PT re-orients it between sets.
+export type SetMode = 'flexion' | 'extension';
+export const Mode = { NONE: 0, FLEXION: 1, EXTENSION: 2 } as const;
+export type Mode = (typeof Mode)[keyof typeof Mode];
+export const modeName = (m: number): SetMode | null =>
+  m === Mode.FLEXION ? 'flexion' : m === Mode.EXTENSION ? 'extension' : null;
+/** +1 for flexion sets, -1 for extension sets. */
+export const modeDir = (m: SetMode) => (m === 'flexion' ? 1 : -1);
+
+// Bit flags in WristState.calib. Steps are requested with ExoControl.calibrate().
+export const Calib = {
+  NEUTRAL: 1,   // anatomical neutral set (angle 0)
+  START: 2,     // start pose recorded (start_deg valid)
+  DIRECTION: 4, // test movement done, sensor sign confirmed
+  BUSY: 8,      // a step is running
+  FLIPPED: 16,  // test movement found the sensors reversed (handled automatically)
+  FAILED: 32,   // test movement too small; repeat it
+} as const;
+export type CalibStep = 'neutral' | 'start' | 'test_move' | 'cancel';
+
 export interface WristState {
   t: number; // header.stamp in seconds (Unix time)
-  angle_deg: number; // + = flexion; NaN until the angle filter exists
+  angle_deg: number; // from anatomical neutral, + = flexion
   velocity_dps: number;
   emg_flex: number; // envelope, ADC counts (later %MVC)
   emg_ext: number;
@@ -48,9 +68,19 @@ export interface WristState {
   emg_ext_thresh: number;
   phase: Phase;
   status: number;
+  mode: Mode;
+  calib: number; // Calib bits
+  start_deg: number; // start pose of the current set; 0 until recorded
+  excursion_deg: number; // degrees moved from the start pose in the working direction (>= 0)
 }
 
 export type ConnectionState = 'connecting' | 'connected' | 'disconnected';
+
+/** Commands to the exo's state node (ROS: /wrist/mode and /wrist/calibrate, std_msgs/String). */
+export interface ExoControl {
+  setMode(mode: SetMode | 'none'): void;
+  calibrate(step: CalibStep): void;
+}
 
 export interface ExoStream {
   /** Called once per WristState (100 Hz). Returns an unsubscribe function. */
@@ -112,12 +142,26 @@ export interface SessionSummary {
   peakTorqueNm?: number; // estimated, from angle + spring setting
 }
 
+/** One block of reps in one direction, with one exo orientation and spring setting. */
+export interface SessionSet {
+  mode: SetMode;
+  springSetting: number;
+  startedAt: string;
+  endedAt: string;
+  startDeg: number; // start pose (deg from neutral)
+  reps: number;
+  bestDeg: number; // furthest angle reached in the working direction (deg from neutral, signed)
+  bestExcursionDeg: number; // furthest movement from the start pose
+  peakTorqueNm: number; // estimated
+}
+
 export interface Session {
   id: string;
   patientId: string;
   startedAt: string;
   endedAt: string | null; // null = still recording
   springSetting: number;
+  sets?: SessionSet[]; // one-direction exo; absent on older sessions
   notes: string;
   summary: SessionSummary | null; // null until processed
 }
@@ -132,7 +176,7 @@ export interface ExoApi {
   listSessions(patientId: string): Promise<Session[]>;
   startSession(patientId: string, opts: { springSetting: number; notes: string }): Promise<Session>;
   /** End a recording and keep it. The live backend will compute the summary from recorded data. */
-  stopSession(sessionId: string, result: { summary: SessionSummary; notes: string }): Promise<Session>;
+  stopSession(sessionId: string, result: { summary: SessionSummary; notes: string; sets?: SessionSet[] }): Promise<Session>;
   /** End a recording and throw it away. */
   discardSession(sessionId: string): Promise<void>;
 }

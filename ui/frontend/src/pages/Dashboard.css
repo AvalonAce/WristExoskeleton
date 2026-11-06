@@ -59,6 +59,12 @@
 .empty p { color: var(--slate); }
 .empty .btn { margin-top: var(--s2); border-radius: var(--r-item); }
 
+/* current set in the header */
+.set-pill { padding: 8px 14px; border-radius: var(--r-pill); font-weight: 600; font-size: var(--t-sm); background: var(--surface); color: var(--slate); }
+.set-pill--flexion { background: var(--flex-wash); color: var(--flex-ink); }
+.set-pill--extension { background: var(--ext-wash); color: var(--ext-ink); }
+.rec .btn { border-radius: var(--r-item); }
+
 /* ---- workspace ---- */
 .work { padding: var(--s4) var(--s4) var(--s4) var(--s5); max-width: 1360px; min-width: 0; }
 .work-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s4); }

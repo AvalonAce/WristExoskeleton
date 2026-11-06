@@ -1,12 +1,14 @@
 // PT dashboard: patient list on the left; the selected patient's Session / History / Profile.
-// Flows: Add patient (dialog) -> Start session (fit, sensor check, baseline) -> recording ->
-// Stop session -> save or discard.
+// Flows: Add patient -> Start session = set 1 (direction, sensors, calibration) -> recording ->
+// Next set (re-orient, recalibrate; the exo resists one direction per set) -> Stop session ->
+// save or discard.
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddPatientFlow from '../components/AddPatientFlow';
-import SessionEndDialog, { fmtDuration, type SessionResult } from '../components/SessionEndDialog';
-import StartSessionFlow from '../components/StartSessionFlow';
-import { api, type NewPatient, type Patient, type Session } from '../data';
+import SessionEndDialog, { fmtDuration, totals, type SessionResult } from '../components/SessionEndDialog';
+import SetSetupFlow, { type SetStart } from '../components/SetSetupFlow';
+import { api, control, type NewPatient, type Patient, type Session, type SessionSet, type SetMode } from '../data';
+import type { SessionStats } from '../hooks/useSessionStats';
 import { useSessionStats } from '../hooks/useSessionStats';
 import { useWristState } from '../hooks/useWristState';
 import { currentUser, signOut } from '../lib/auth';
@@ -21,11 +23,32 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'session', label: 'Session' }, { id: 'history', label: 'History' }, { id: 'profile', label: 'Profile' },
 ];
 
+interface ActiveSet {
+  mode: SetMode;
+  spring: number;
+  startedMs: number;
+  startDeg: number;
+}
+
 interface Recording {
   session: Session;
   startedMs: number;
-  spring: number;
+  sets: SessionSet[]; // finished sets
+  current: ActiveSet | null; // null between sets
 }
+
+function finishSet(a: ActiveSet, st: SessionStats): SessionSet {
+  return {
+    mode: a.mode, springSetting: a.spring, startDeg: a.startDeg,
+    startedAt: new Date(a.startedMs).toISOString(), endedAt: new Date().toISOString(),
+    reps: st.reps,
+    bestDeg: a.mode === 'flexion' ? st.maxFlex : -st.maxExt,
+    bestExcursionDeg: st.bestExcursion,
+    peakTorqueNm: torqueAt(st.bestExcursion, a.spring),
+  };
+}
+
+const other = (m: SetMode): SetMode => (m === 'flexion' ? 'extension' : 'flexion');
 
 const sideName = (p: Patient) => (p.side === 'R' ? 'Right wrist' : 'Left wrist');
 
@@ -57,13 +80,14 @@ export default function Dashboard() {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<Tab>('session');
   const [adding, setAdding] = useState(false);
-  const [starting, setStarting] = useState(false);
+  const [setup, setSetup] = useState(false); // set-up dialog open (first or next set)
   const [rec, setRec] = useState<Recording | null>(null);
   const [ended, setEnded] = useState<SessionResult | null>(null);
   const [historyRefresh, setHistoryRefresh] = useState(0);
 
   const { state: live, connection } = useWristState(30);
-  const stats = useSessionStats(rec?.session.id ?? 'idle');
+  // Counts restart with every set.
+  const stats = useSessionStats(rec ? `${rec.session.id}:${rec.sets.length}:${rec.current ? 'on' : 'off'}` : 'idle');
   const elapsed = useElapsed(rec?.startedMs ?? null);
 
   const load = useCallback(async (select?: string) => {
@@ -84,35 +108,58 @@ export default function Dashboard() {
     await load(created.id);
   }
 
-  async function startRecording(opts: { springSetting: number; notes: string }) {
+  /** Set-up dialog finished: start the session (first set) or the next set. */
+  async function startSet(st: SetStart) {
     if (!p) return;
-    const session = await api.startSession(p.id, opts);
-    setRec({ session, startedMs: Date.now(), spring: opts.springSetting });
-    setStarting(false);
+    const current: ActiveSet = { mode: st.mode, spring: st.springSetting, startedMs: Date.now(), startDeg: st.startDeg };
+    if (!rec) {
+      const session = await api.startSession(p.id, { springSetting: st.springSetting, notes: st.notes });
+      setRec({ session, startedMs: Date.now(), sets: [], current });
+    } else {
+      setRec({ ...rec, current });
+    }
+    setSetup(false);
     setTab('session');
+  }
+
+  /** Close the running set (if any) into the session's list. */
+  function closeSet(r: Recording): Recording {
+    return r.current ? { ...r, sets: [...r.sets, finishSet(r.current, stats)], current: null } : r;
+  }
+
+  function nextSet() {
+    if (rec) setRec(closeSet(rec));
+    setSetup(true);
+  }
+
+  function cancelSetup() {
+    setSetup(false);
+    if (!rec) control.setMode('none'); // nothing started: put the node back to idle
   }
 
   function stopRecording() {
     if (!rec) return;
-    setEnded({
-      durationS: elapsed, reps: stats.reps, maxFlexDeg: stats.maxFlex, maxExtDeg: stats.maxExt,
-      peakTorqueNm: torqueAt(Math.max(stats.maxFlex, stats.maxExt), rec.spring), springSetting: rec.spring,
-    });
+    const r = closeSet(rec);
+    setRec(r);
+    setEnded({ durationS: elapsed, sets: r.sets });
   }
 
   async function finish(save: boolean, notes = '') {
     if (!rec || !ended) return;
     if (save) {
+      const t = totals(ended.sets);
       await api.stopSession(rec.session.id, {
         notes,
+        sets: ended.sets,
         summary: {
-          reps: ended.reps, maxFlexDeg: ended.maxFlexDeg, maxExtDeg: ended.maxExtDeg,
-          meanOnsetLeadMs: null, peakTorqueNm: ended.peakTorqueNm,
+          reps: t.reps, maxFlexDeg: t.maxFlexDeg, maxExtDeg: t.maxExtDeg,
+          meanOnsetLeadMs: null, peakTorqueNm: t.peakTorqueNm,
         },
       });
     } else {
       await api.discardSession(rec.session.id);
     }
+    control.setMode('none');
     setEnded(null);
     setRec(null);
     setHistoryRefresh((n) => n + 1);
@@ -173,16 +220,26 @@ export default function Dashboard() {
                 <h1>{p.displayName}</h1>
                 <p className="work-meta">
                   <span>{p.code}</span><span>{sideName(p)}</span>
-                  <span>Spring setting {rec?.spring ?? p.springSetting}</span>
+                  <span>Spring setting {rec?.current?.spring ?? p.springSetting}</span>
                 </p>
               </div>
-              {recording ? (
+              {rec ? (
                 <div className="rec">
                   <span className="rec-badge" role="status"><i aria-hidden="true" />Recording {fmtDuration(elapsed)}</span>
-                  <button className="btn" onClick={stopRecording}>Stop session</button>
+                  {rec.current ? (
+                    <span className={`set-pill set-pill--${rec.current.mode}`}>
+                      Set {rec.sets.length + 1}, {rec.current.mode}
+                    </span>
+                  ) : (
+                    <span className="set-pill">Between sets</span>
+                  )}
+                  <button key="next" className="btn btn--quiet" onClick={nextSet}>
+                    {rec.current ? 'Next set' : `Start set ${rec.sets.length + 1}`}
+                  </button>
+                  <button key="stop" className="btn" onClick={stopRecording}>Stop session</button>
                 </div>
               ) : (
-                <button className="btn" onClick={() => setStarting(true)}>Start session</button>
+                <button className="btn" onClick={() => setSetup(true)}>Start session</button>
               )}
             </header>
 
@@ -196,7 +253,7 @@ export default function Dashboard() {
             </nav>
 
             {tab === 'session' && (
-              <SessionTab patient={p} spring={rec?.spring ?? p.springSetting} live={live}
+              <SessionTab patient={p} spring={rec?.current?.spring ?? p.springSetting} set={rec?.current?.mode ?? null} live={live}
                 connection={connection} stats={stats} recording={recording} />
             )}
             {tab === 'history' && <HistoryTab patient={p} refresh={historyRefresh} />}
@@ -211,8 +268,15 @@ export default function Dashboard() {
         <AddPatientFlow defaults={newPatientDefaults(patients)} onCancel={() => setAdding(false)} onCreate={createPatient} />
       )}
 
-      {starting && p && (
-        <StartSessionFlow patient={p} onCancel={() => setStarting(false)} onStart={startRecording} />
+      {setup && p && (
+        <SetSetupFlow
+          patient={p}
+          setNumber={rec ? rec.sets.length + 1 : 1}
+          defaultMode={rec?.sets.length ? other(rec.sets[rec.sets.length - 1].mode) : 'flexion'}
+          defaultSpring={rec?.sets.length ? rec.sets[rec.sets.length - 1].springSetting : p.springSetting}
+          onCancel={cancelSetup}
+          onStart={startSet}
+        />
       )}
 
       {ended && p && rec && (
