@@ -3,7 +3,7 @@
 //   - on disk via the storage server (live mode: ui/backend/server.py -> ~/exo_data/store.json).
 // The class name is historical; it is the real store in live mode.
 import type {
-  ExoApi, HealthCheck, NewPatient, Patient, Session, SessionSet, SessionSummary, StorageInfo,
+  ExoApi, HealthCheck, NewPatient, Patient, Recording, Session, SessionSet, SessionSummary, StorageInfo,
 } from './types';
 
 const KEY = 'wrist-exo-mock-v3'; // bump when the seed changes so old demo data is replaced
@@ -12,6 +12,7 @@ export interface Store {
   patients: Patient[];
   sessions: Session[];
   healthChecks: HealthCheck[];
+  recordings: Recording[];
 }
 
 export interface Persistence {
@@ -74,10 +75,10 @@ const daysAgo = (d: number, h = 10) => {
 const plusMin = (iso: string, m: number) => new Date(Date.parse(iso) + m * 60000).toISOString();
 
 function seed(): Store {
-  return { ...seedDemo(), healthChecks: [] };
+  return { ...seedDemo(), healthChecks: [], recordings: [] };
 }
 
-function seedDemo(): Omit<Store, 'healthChecks'> {
+function seedDemo(): Omit<Store, 'healthChecks' | 'recordings'> {
   const patients: Patient[] = [
     { id: 'p1', code: 'P-001', displayName: 'Demo Patient', side: 'R', springFlex: 2, springExt: 1,
       romGoalFlexDeg: 60, romGoalExtDeg: 50, notes: 'Post distal radius fracture, week 8.',
@@ -118,7 +119,7 @@ function seedDemo(): Omit<Store, 'healthChecks'> {
   return { patients, sessions };
 }
 
-const empty = (): Store => ({ patients: [], sessions: [], healthChecks: [] });
+const empty = (): Store => ({ patients: [], sessions: [], healthChecks: [], recordings: [] });
 
 const delay = <T,>(v: T) => new Promise<T>((r) => setTimeout(() => r(v), 120));
 export const newId = (p: string) => `${p}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -153,6 +154,27 @@ export class MockApi implements ExoApi {
     await this.ready;
     this.db = seed();
     this.save();
+  }
+
+  async listRecordings(patientId?: string) {
+    await this.ready;
+    return delay(this.db.recordings.filter((r) => !patientId || r.patientId === patientId)
+      .sort((a, b) => b.startedAt.localeCompare(a.startedAt)));
+  }
+
+  async saveRecording(r: Recording) {
+    await this.ready;
+    const i = this.db.recordings.findIndex((x) => x.id === r.id);
+    if (i >= 0) this.db.recordings[i] = r; else this.db.recordings.push(r);
+    this.save();
+    return delay(r);
+  }
+
+  async deleteRecording(id: string) {
+    await this.ready;
+    this.db.recordings = this.db.recordings.filter((r) => r.id !== id);
+    this.save();
+    return delay(undefined);
   }
 
   async listHealthChecks(patientId: string) {
@@ -209,6 +231,7 @@ export class MockApi implements ExoApi {
     this.db.patients = this.db.patients.filter((p) => p.id !== id);
     this.db.sessions = this.db.sessions.filter((s) => s.patientId !== id);
     this.db.healthChecks = this.db.healthChecks.filter((h) => h.patientId !== id);
+    this.db.recordings = this.db.recordings.filter((r) => r.patientId !== id);
     this.save();
     return delay(undefined);
   }

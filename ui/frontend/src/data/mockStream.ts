@@ -93,7 +93,7 @@ export class MockStream implements ExoStream, ExoControl {
 
   calibrate(step: CalibStep) {
     if (step === 'cancel') { this.job = null; return; }
-    if (!this.mode) return;
+    if (!this.mode && step !== 'neutral') return; // the node allows neutral without a set direction
     if (step === 'test_move' && !(this.cal & Calib.START)) return;
     this.cal &= ~Calib.FAILED;
     this.job = { step, t0: this.simT, from: this.lastAngle };
@@ -220,6 +220,10 @@ export class MockStream implements ExoStream, ExoControl {
 
   private step(): WristState {
     this.simT += DT;
+    if (!this.mode && this.job && this.simT - this.job.t0 >= 0.8 + HOLD_S) { // neutral, no set
+      this.cal |= Calib.NEUTRAL;
+      this.job = null;
+    }
     const fr = this.mode ? this.setFrame(this.mode) : this.legacyFrame();
 
     // Differentiate the clean angle, then add noise at the real gyro's level (1.5 deg/s at rest).

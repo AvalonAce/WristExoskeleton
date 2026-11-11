@@ -20,8 +20,8 @@ export default function SignIn() {
     if (Object.keys(next).length) return;
     setBusy(true);
     await signIn(email.trim(), password);
-    // Connect to the exo next, unless they were heading somewhere specific.
-    navigate(from && from !== '/connect' ? from : '/connect', { replace: true });
+    // Straight to the capture screen, unless they were heading somewhere specific.
+    navigate(from && from !== '/connect' ? from : '/capture', { replace: true });
   }
 
   return (

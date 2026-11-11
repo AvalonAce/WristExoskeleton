@@ -74,7 +74,16 @@ The sensor test uses only the raw topics, so it works even before `wrist_state` 
 If rosbridge is up but a sensor shows "No data" while `ros2 topic hz` shows it publishing,
 suspect a QoS mismatch (the firmware publishes best-effort); report it, there is a fix.
 
-## Health check (data collection)
+## Capture screen (class demo, default after sign in)
+
+Sign in → `/capture`. Left: participants (**+ New participant**: code, optional label, wrist).
+Top: live angle and EMG, **Set neutral** (wrist straight, 2 s), **Flip direction** (if flexion
+reads as extension), a note, **Record / Stop**. Each recording saves max flexion / extension,
+peak speed, reps each way (past 15°, back under 5°), EMG peak + mean, a 20 Hz trace, and a rosbag
+(`~/exo_data/bags/<code>_<YYYYMMDD_HHMMSS>/`). **Trace CSV** per recording; **Export all CSV** =
+one row per recording, every participant. The full dashboard is still at `/dashboard`.
+
+## Health check (guided protocol, at /dashboard)
 
 Dashboard → patient → **Health check** tab → **Start health check**. Guided: reference wrist first,
 then treated; each wrist does a flexion block and an extension block (re-orient the exo between).

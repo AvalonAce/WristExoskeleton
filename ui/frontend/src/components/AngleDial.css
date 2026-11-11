@@ -1,0 +1,21 @@
+.ad { margin: 0; width: 100%; max-width: 440px; }
+.ad svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ad-track { fill: none; stroke: var(--hairline); stroke-width: 16; stroke-linecap: round; }
+.ad-fill { fill: none; stroke-width: 16; stroke-linecap: round; }
+.ad-fill--flex { stroke: var(--flex); }
+.ad-fill--ext { stroke: var(--ext); }
+.ad-tick { stroke: var(--hairline); stroke-width: 1.5; }
+.ad-tick--major { stroke: var(--slate); stroke-width: 2; }
+.ad-label { fill: var(--slate); font-size: 13px; font-variant-numeric: tabular-nums; }
+.ad-peak { stroke-width: 3; stroke-dasharray: 4 3; }
+.ad-peak--flex { stroke: var(--flex-ink); }
+.ad-peak--ext { stroke: var(--ext-ink); }
+.ad-knob { stroke: #fff; stroke-width: 3; }
+.ad-knob--flex { fill: var(--flex); }
+.ad-knob--ext { fill: var(--ext); }
+.ad-num { fill: var(--ink); font-size: 76px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.ad-num--none { fill: var(--hairline); }
+.ad-dir { font-size: 16px; font-weight: 600; text-transform: capitalize; }
+.ad-dir--flex { fill: var(--flex-ink); }
+.ad-dir--ext { fill: var(--ext-ink); }
+.ad-other { fill: var(--slate); font-size: 14px; font-variant-numeric: tabular-nums; }

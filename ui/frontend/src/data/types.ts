@@ -236,8 +236,37 @@ export interface StorageInfo {
   error?: string; // last load/save problem
 }
 
+// ---- free recording (class demo capture) -------------------------------------
+
+/** One Record -> Stop on the Capture screen. Angles: + = flexion, after the screen's sign flip. */
+export interface Recording {
+  id: string;
+  patientId: string;
+  startedAt: string;
+  durationS: number;
+  note: string;
+  direction: SetMode;   // what the toggle was set to (the exo's resisted direction)
+  maxFlexDeg: number;   // furthest into flexion, deg from neutral (0 if never past neutral)
+  maxExtDeg: number;    // furthest into extension, positive
+  peakDps: number;      // highest angular speed, deg/s
+  flexReps: number;     // past 15 deg flexion and back under 5 deg
+  extReps: number;
+  emgFlexPeak: number;  // envelope, ADC counts
+  emgExtPeak: number;
+  emgFlexMean: number;
+  emgExtMean: number;
+  angleSign: 1 | -1;    // display flip in use (raw bag is unflipped)
+  neutralSet: boolean;  // 'Set neutral' done before recording (else the node's start-up auto-zero)
+  bag: string | null;   // folder in ~/exo_data/bags
+  /** 20 Hz: seconds from start, angle, speed, flexor and extensor envelope. */
+  trace: { t: number[]; angle: number[]; vel: number[]; flex: number[]; ext: number[] };
+}
+
 export interface ExoApi {
   readonly storage: StorageInfo;
+  listRecordings(patientId?: string): Promise<Recording[]>;
+  saveRecording(r: Recording): Promise<Recording>;
+  deleteRecording(id: string): Promise<void>;
   listHealthChecks(patientId: string): Promise<HealthCheck[]>;
   /** Create or replace (by id). Called after every block so nothing is lost mid-visit. */
   saveHealthCheck(hc: HealthCheck): Promise<HealthCheck>;
