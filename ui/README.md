@@ -10,7 +10,7 @@ ui/frontend/   Vite + React + TypeScript
   src/data/mockApi.ts     fake patients/sessions, kept in browser localStorage
   src/data/index.ts       picks mock vs live sources (VITE_DATA)
   src/pages/              Patients, Live session, History
-ui/backend/    (later) FastAPI + SQLite: profiles, start/stop recording, history data
+ui/backend/server.py   local storage server (stdlib Python): ~/exo_data/store.json + rosbags
 ```
 
 ## Run (Linux or WSL2)
@@ -32,12 +32,12 @@ npm run dev          # http://localhost:5173
 | `VITE_DATA` | Live stream | Profiles / sessions |
 |---|---|---|
 | `mock` (default) | `MockStream` in the browser | `MockApi` (localStorage) |
-| `live` (`npm run dev:live`) | rosbridge `ws://localhost:9090`: `/imu/hand`, `/imu/forearm`, `/emg/raw`, `/wrist/state` | still `MockApi` (backend not written yet) |
+| `live` (`npm run dev:live`) | rosbridge `ws://localhost:9090`: `/imu/hand`, `/imu/forearm`, `/emg/raw`, `/wrist/state` | storage server (`ui/backend/server.py`, port 8765, reached at `/api`) → `~/exo_data` |
 
 Set it in `ui/frontend/.env.local` (see `.env.example`). Pages never import a source directly,
 only `stream` and `api` from `src/data`, so switching to live data needs no page changes.
 
-Reset the mock data: in the browser console, `localStorage.removeItem('wrist-exo-mock-v2')`, then reload.
+Reset the mock data: in the browser console, `localStorage.removeItem('wrist-exo-mock-v3')`, then reload.
 
 Demo patients are fictional. Real patient data must never be committed.
 
@@ -73,3 +73,24 @@ The sensor test uses only the raw topics, so it works even before `wrist_state` 
 
 If rosbridge is up but a sensor shows "No data" while `ros2 topic hz` shows it publishing,
 suspect a QoS mismatch (the firmware publishes best-effort); report it, there is a fix.
+
+## Health check (data collection)
+
+Dashboard → patient → **Health check** tab → **Start health check**. Guided: reference wrist first,
+then treated; each wrist does a flexion block and an extension block (re-orient the exo between).
+Each block: fit + calibrate → range (3 reps + goniometer) → comfortable pace (5 reps) →
+loaded 30 s at spring 1 → pain 0–10. The visit is saved after every block.
+Process and how to read results: the "Wrist Exo Health Check: Usage Guide" doc.
+
+Live mode storage (started by `scripts/run_all.sh`, or by hand with the workspace sourced):
+
+```bash
+python3 ui/backend/server.py      # http://127.0.0.1:8765, data in ~/exo_data
+```
+
+- `~/exo_data/store.json` participants, sessions, health checks (backups in `~/exo_data/backups/`)
+- `~/exo_data/bags/<code>_<date>_<wrist>_<direction>_<test>/` one rosbag per test step
+- Results tab → Export CSV, one row per block
+
+Reps are counted in the browser from `excursion_deg` (start > 3°, counts if > 10°, ends < 5°),
+not from the phase classifier. Metrics: `src/lib/healthMetrics.ts`.

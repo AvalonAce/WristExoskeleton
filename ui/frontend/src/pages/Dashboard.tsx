@@ -5,22 +5,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddPatientFlow from '../components/AddPatientFlow';
+import HealthCheckFlow from '../components/HealthCheckFlow';
 import SessionEndDialog, { fmtDuration, totals, type SessionResult } from '../components/SessionEndDialog';
 import SetSetupFlow, { type SetStart } from '../components/SetSetupFlow';
-import { api, control, type NewPatient, type Patient, type Session, type SessionSet, type SetMode } from '../data';
+import { api, control, springFor, type NewPatient, type Patient, type Session, type SessionSet, type SetMode } from '../data';
 import type { SessionStats } from '../hooks/useSessionStats';
 import { useSessionStats } from '../hooks/useSessionStats';
 import { useWristState } from '../hooks/useWristState';
 import { currentUser, signOut } from '../lib/auth';
 import { torqueAt } from '../lib/spring';
+import HealthTab from './tabs/HealthTab';
 import HistoryTab from './tabs/HistoryTab';
 import ProfileTab from './tabs/ProfileTab';
 import SessionTab from './tabs/SessionTab';
 import './Dashboard.css';
 
-type Tab = 'session' | 'history' | 'profile';
+type Tab = 'session' | 'history' | 'health' | 'profile';
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'session', label: 'Session' }, { id: 'history', label: 'History' }, { id: 'profile', label: 'Profile' },
+  { id: 'session', label: 'Session' }, { id: 'history', label: 'History' },
+  { id: 'health', label: 'Health check' }, { id: 'profile', label: 'Profile' },
 ];
 
 interface ActiveSet {
@@ -56,7 +59,7 @@ function newPatientDefaults(existing: Patient[]): NewPatient {
   const nums = existing.map((p) => parseInt(p.code.replace(/\D/g, ''), 10)).filter(Number.isFinite);
   const next = (nums.length ? Math.max(...nums) : 0) + 1;
   return {
-    code: `P-${String(next).padStart(3, '0')}`, displayName: '', side: 'R', springSetting: 1,
+    code: `P-${String(next).padStart(3, '0')}`, displayName: '', side: 'R', springFlex: 1, springExt: 1,
     romGoalFlexDeg: 60, romGoalExtDeg: 50, notes: '',
   };
 }
@@ -84,6 +87,8 @@ export default function Dashboard() {
   const [rec, setRec] = useState<Recording | null>(null);
   const [ended, setEnded] = useState<SessionResult | null>(null);
   const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [hcOpen, setHcOpen] = useState(false);
+  const [hcRefresh, setHcRefresh] = useState(0);
 
   const { state: live, connection } = useWristState(30);
   // Counts restart with every set.
@@ -220,7 +225,9 @@ export default function Dashboard() {
                 <h1>{p.displayName}</h1>
                 <p className="work-meta">
                   <span>{p.code}</span><span>{sideName(p)}</span>
-                  <span>Spring setting {rec?.current?.spring ?? p.springSetting}</span>
+                  {rec?.current
+                    ? <span>Spring setting {rec.current.spring} this set</span>
+                    : <span>Springs: flexion {p.springFlex}, extension {p.springExt}</span>}
                 </p>
               </div>
               {rec ? (
@@ -253,10 +260,13 @@ export default function Dashboard() {
             </nav>
 
             {tab === 'session' && (
-              <SessionTab patient={p} spring={rec?.current?.spring ?? p.springSetting} set={rec?.current?.mode ?? null} live={live}
+              <SessionTab patient={p} spring={rec?.current?.spring ?? p.springFlex} set={rec?.current?.mode ?? null} live={live}
                 connection={connection} stats={stats} recording={recording} />
             )}
             {tab === 'history' && <HistoryTab patient={p} refresh={historyRefresh} />}
+            {tab === 'health' && (
+              <HealthTab patient={p} refresh={hcRefresh} disabled={recording} onStart={() => setHcOpen(true)} />
+            )}
             {tab === 'profile' && (
               <ProfileTab patient={p} onSaved={(u) => setPatients((ps) => ps!.map((x) => (x.id === u.id ? u : x)))} />
             )}
@@ -273,10 +283,14 @@ export default function Dashboard() {
           patient={p}
           setNumber={rec ? rec.sets.length + 1 : 1}
           defaultMode={rec?.sets.length ? other(rec.sets[rec.sets.length - 1].mode) : 'flexion'}
-          defaultSpring={rec?.sets.length ? rec.sets[rec.sets.length - 1].springSetting : p.springSetting}
+          springDefault={(m) => springFor(p, m)}
           onCancel={cancelSetup}
           onStart={startSet}
         />
+      )}
+
+      {hcOpen && p && (
+        <HealthCheckFlow patient={p} onClose={() => { setHcOpen(false); setHcRefresh((x) => x + 1); setTab('health'); }} />
       )}
 
       {ended && p && rec && (

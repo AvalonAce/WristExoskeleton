@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # One terminal for a live session: micro-ROS agent (Docker), wrist_state, rosbridge, and the UI.
-# Ctrl+C stops everything. Logs: ~/exo_runs/logs/<timestamp>/{agent,state,rosbridge}.log
+# Also starts the storage server (ui/backend/server.py): profiles, health checks, rosbags in ~/exo_data.
+# Ctrl+C stops everything. Logs: ~/exo_runs/logs/<timestamp>/{agent,state,rosbridge,api}.log
 #
 # Usage:  ./scripts/run_all.sh            live, exo plugged in
 #         ./scripts/run_all.sh --build    rebuild exo_ws + npm install first
@@ -24,7 +25,7 @@ while [ $# -gt 0 ]; do
     --build) BUILD=1 ;;
     --mock) MOCK=1 ;;
     --dev) DEV="${2:-}"; shift ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1 (try --help)"; exit 2 ;;
   esac
   shift
@@ -146,12 +147,16 @@ fi
 # ---------------------------------------------------------------- 2. state node, 3. rosbridge
 start wrist_state "$LOG_DIR/state.log" "ros2 run wrist_exo wrist_state"
 start rosbridge "$LOG_DIR/rosbridge.log" "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
+# Storage + rosbag recording for profiles and health checks (data in ~/exo_data).
+start api "$LOG_DIR/api.log" "python3 '$REPO/ui/backend/server.py'"
 for _ in $(seq 1 15); do
   (exec 3<>/dev/tcp/127.0.0.1/9090) 2>/dev/null && break
   sleep 1
 done
 (exec 3<>/dev/tcp/127.0.0.1/9090) 2>/dev/null && say "rosbridge ready on ws://localhost:9090" \
   || warn "rosbridge not answering yet; see $LOG_DIR/rosbridge.log"
+(exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null && say "storage ready, data in ~/exo_data" \
+  || warn "storage server not answering yet; see $LOG_DIR/api.log"
 
 # Report if a background part dies while the UI runs.
 (

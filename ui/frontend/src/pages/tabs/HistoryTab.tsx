@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react';
+// Range-of-motion trend, then one row per session; a session with sets expands to show them.
+import { Fragment, useEffect, useState } from 'react';
 import { fmtDuration } from '../../components/SessionEndDialog';
-import TrendChart from '../../components/TrendChart';
-import { api, type Patient, type Session } from '../../data';
+import TrendChart, { bests } from '../../components/TrendChart';
+import { api, type Patient, type Session, type SessionSet } from '../../data';
 import './tabs.css';
+
+const secs = (a: string, b: string | null) => (b ? (Date.parse(b) - Date.parse(a)) / 1000 : 0);
+const dirs = (sets: SessionSet[]) =>
+  sets.map((s) => (s.mode === 'flexion' ? 'F' : 'E')).join(' ');
+const furthest = (d: number) => `${Math.abs(d).toFixed(0)}° ${d >= 0 ? 'flexion' : 'extension'}`;
 
 export default function HistoryTab({ patient, refresh }: { patient: Patient; refresh: number }) {
   const [sessions, setSessions] = useState<Session[] | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => {
     setSessions(null);
@@ -37,24 +44,64 @@ export default function HistoryTab({ patient, refresh }: { patient: Patient; ref
           <table className="tab-table">
             <thead>
               <tr>
-                <th>Date</th><th>Length</th><th>Spring</th><th>Reps</th>
+                <th aria-label="Show sets" /><th>Date</th><th>Length</th><th>Sets</th><th>Reps</th>
                 <th>Best flexion</th><th>Best extension</th><th>EMG lead</th><th>Notes</th>
               </tr>
             </thead>
             <tbody>
               {saved.map((s) => {
-                const len = s.endedAt ? (Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 1000 : 0;
+                const b = bests(s);
+                const has = !!s.sets?.length;
+                const isOpen = open === s.id;
                 return (
-                  <tr key={s.id}>
-                    <td>{new Date(s.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                    <td>{fmtDuration(len)}</td>
-                    <td className="num">{s.springSetting}</td>
-                    <td className="num">{s.summary!.reps}</td>
-                    <td className="num flex">{s.summary!.maxFlexDeg.toFixed(0)}°</td>
-                    <td className="num ext">{s.summary!.maxExtDeg.toFixed(0)}°</td>
-                    <td className="num">{s.summary!.meanOnsetLeadMs != null ? `${s.summary!.meanOnsetLeadMs.toFixed(0)} ms` : '—'}</td>
-                    <td className="tab-notes">{s.notes}</td>
-                  </tr>
+                  <Fragment key={s.id}>
+                    <tr className={isOpen ? 'is-open' : ''}>
+                      <td>
+                        {has && (
+                          <button type="button" className="tab-expand" aria-expanded={isOpen}
+                            aria-label={isOpen ? 'Hide sets' : 'Show sets'} onClick={() => setOpen(isOpen ? null : s.id)}>
+                            {isOpen ? '−' : '+'}
+                          </button>
+                        )}
+                      </td>
+                      <td>{new Date(s.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                      <td>{fmtDuration(secs(s.startedAt, s.endedAt))}</td>
+                      <td>{has ? <span className="tab-dirs">{s.sets!.length}<small>{dirs(s.sets!)}</small></span> : '—'}</td>
+                      <td className="num">{s.summary!.reps}</td>
+                      <td className="num flex">{b.flex != null ? `${b.flex.toFixed(0)}°` : '—'}</td>
+                      <td className="num ext">{b.ext != null ? `${b.ext.toFixed(0)}°` : '—'}</td>
+                      <td className="num">{s.summary!.meanOnsetLeadMs != null ? `${s.summary!.meanOnsetLeadMs.toFixed(0)} ms` : '—'}</td>
+                      <td className="tab-notes">{s.notes}</td>
+                    </tr>
+                    {isOpen && has && (
+                      <tr className="tab-sets-row">
+                        <td />
+                        <td colSpan={8}>
+                          <table className="tab-sets">
+                            <thead>
+                              <tr><th>Set</th><th>Direction</th><th>Spring</th><th>Reps</th><th>Start pose</th>
+                                <th>Range from start</th><th>Furthest</th><th>Peak resistance</th><th>Length</th></tr>
+                            </thead>
+                            <tbody>
+                              {s.sets!.map((x, i) => (
+                                <tr key={i}>
+                                  <td>{i + 1}</td>
+                                  <td className={x.mode === 'flexion' ? 'flex' : 'ext'}>{x.mode === 'flexion' ? 'Flexion' : 'Extension'}</td>
+                                  <td>{x.springSetting}</td>
+                                  <td>{x.reps}</td>
+                                  <td>{furthest(x.startDeg)}</td>
+                                  <td>{x.bestExcursionDeg.toFixed(0)}°</td>
+                                  <td>{furthest(x.bestDeg)}</td>
+                                  <td>{x.peakTorqueNm.toFixed(2)} N·m</td>
+                                  <td>{fmtDuration(secs(x.startedAt, x.endedAt))}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>

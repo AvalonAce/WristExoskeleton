@@ -8,7 +8,8 @@
 // wrist_exo_msgs types.
 import ROSLIB from 'roslib';
 import type {
-  ConnectionState, EmgBatchSample, ExoStream, ImuName, ImuSample, Phase, RawFeed, WristState,
+  CalibStep, ConnectionState, EmgBatchSample, ExoControl, ExoStream, ImuName, ImuSample, Mode,
+  Phase, RawFeed, SetMode, WristState,
 } from './types';
 
 interface Stamp { sec: number; nanosec: number }
@@ -94,6 +95,10 @@ export class RosbridgeStream implements ExoStream {
       emg_ext_thresh: num(m.emg_ext_thresh),
       phase: m.phase as Phase,
       status: m.status,
+      mode: (m.mode ?? 0) as Mode,
+      calib: m.calib ?? 0,
+      start_deg: num(m.start_deg) || 0,
+      excursion_deg: num(m.excursion_deg) || 0,
     }));
   }
 }
@@ -118,4 +123,23 @@ export class RosRawFeed implements RawFeed {
       t: sec(m.header.stamp), rate: m.sample_rate, flexor: m.flexor, extensor: m.extensor,
     }));
   }
+}
+
+/** Sends set mode and calibration steps to wrist_state (std_msgs/String topics). */
+export class RosControl implements ExoControl {
+  private mode: ROSLIB.Topic;
+  private cal: ROSLIB.Topic;
+  constructor(url: string) {
+    const { ros } = rosConnection(url);
+    this.mode = new ROSLIB.Topic({ ros, name: '/wrist/mode', messageType: 'std_msgs/msg/String' });
+    this.cal = new ROSLIB.Topic({ ros, name: '/wrist/calibrate', messageType: 'std_msgs/msg/String' });
+    // Advertise up front (and again after reconnects): a message published in the same instant
+    // a topic is first advertised can be dropped before the subscriber is matched.
+    // Callers should still confirm through WristState.mode / calib and resend if needed.
+    rosConnection(url).onConnection((c) => {
+      if (c === 'connected') { this.mode.advertise(); this.cal.advertise(); }
+    });
+  }
+  setMode(mode: SetMode | 'none') { this.mode.publish({ data: mode } as unknown as ROSLIB.Message); }
+  calibrate(step: CalibStep) { this.cal.publish({ data: step } as unknown as ROSLIB.Message); }
 }

@@ -125,7 +125,8 @@ export interface Patient {
   code: string; // de-identified label shown in the UI, e.g. "P-001"
   displayName: string;
   side: Side; // treated wrist
-  springSetting: number; // notch index on the exo (see torque calibration)
+  springFlex: number; // spring notch for flexion sets (see torque calibration)
+  springExt: number; // spring notch for extension sets
   romGoalFlexDeg: number;
   romGoalExtDeg: number;
   notes: string;
@@ -133,6 +134,10 @@ export interface Patient {
 }
 
 export type NewPatient = Omit<Patient, 'id' | 'createdAt'>;
+
+/** The profile's spring setting for a set direction. */
+export const springFor = (p: Pick<Patient, 'springFlex' | 'springExt'>, m: SetMode) =>
+  m === 'flexion' ? p.springFlex : p.springExt;
 
 export interface SessionSummary {
   reps: number;
@@ -166,7 +171,78 @@ export interface Session {
   summary: SessionSummary | null; // null until processed
 }
 
+// ---- health check ----------------------------------------------------------
+// One visit: for each wrist (reference first, then treated) a flexion block and an extension
+// block. Each block: active range (3 reps + goniometer), comfortable pace (5 reps),
+// loaded (30 s at spring 1), pain 0-10. See the Health Check usage guide.
+
+export type HcRole = 'reference' | 'treated';
+
+/** One rep, measured on its outbound half (start pose -> furthest point). */
+export interface HcRep {
+  peakDeg: number;      // furthest angle in the working direction, deg from neutral, positive
+  excursionDeg: number; // furthest movement from the start pose
+  peakDps: number;      // highest speed on the way out, deg/s
+  outS: number;         // time from motion onset to the furthest point, s
+  sparc: number | null; // smoothness (SPARC) of the outbound speed profile; closer to 0 = smoother
+  gonioDeg?: number | null; // goniometer reading at end range (range test only)
+}
+
+export interface HcEmg {
+  agonist: number;    // mean envelope above resting threshold, working muscle, during reps (ADC counts)
+  antagonist: number; // same, opposite muscle
+  ratio: number;      // antagonist / agonist (co-contraction, provisional)
+}
+
+export interface HcBlock {
+  side: Side;
+  role: HcRole;
+  mode: SetMode;
+  springSetting: number;
+  startDeg: number;
+  startedAt: string;
+  endedAt: string | null;
+  range: HcRep[];
+  pace: HcRep[];
+  loaded: { durationS: number; reps: number; bestDeg: number } | null;
+  emg: HcEmg | null;
+  pain: number | null;
+  bags: string[]; // rosbag folder names in ~/exo_data/bags
+  complete: boolean;
+}
+
+export interface HealthCheck {
+  id: string;
+  patientId: string;
+  startedAt: string;
+  endedAt: string | null;
+  referenceSide: Side | null; // null = no usable reference wrist (both injured)
+  prwe: number | null;        // PRWE total 0-100 from the paper form
+  painBaseline: number | null; // pain 0-10 before the first block
+  notes: string;
+  blocks: HcBlock[];
+}
+
+/** Starts/stops `ros2 bag record` on the storage server. No-op in demo mode. */
+export interface Recorder {
+  readonly available: boolean;
+  start(name: string): Promise<string | null>; // folder name, or null if not recording
+  stop(): Promise<void>;
+}
+
+export interface StorageInfo {
+  where: 'server' | 'browser';
+  label: string;  // shown in the UI
+  error?: string; // last load/save problem
+}
+
 export interface ExoApi {
+  readonly storage: StorageInfo;
+  listHealthChecks(patientId: string): Promise<HealthCheck[]>;
+  /** Create or replace (by id). Called after every block so nothing is lost mid-visit. */
+  saveHealthCheck(hc: HealthCheck): Promise<HealthCheck>;
+  deleteHealthCheck(id: string): Promise<void>;
+
   listPatients(): Promise<Patient[]>;
   getPatient(id: string): Promise<Patient | undefined>;
   createPatient(p: NewPatient): Promise<Patient>;

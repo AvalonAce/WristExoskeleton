@@ -31,3 +31,4 @@
 .seg button:hover { color: var(--ink); }
 .seg button.is-on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(27 42 58 / 0.12); }
 .seg small { font-size: var(--t-xs); color: var(--slate); font-weight: 400; }
+.pf-hint { font-size: var(--t-sm); color: var(--slate); margin-top: calc(-1 * var(--s2)); }

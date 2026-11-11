@@ -25,3 +25,39 @@
 @media (max-width: 900px) {
   .tab-table { display: block; overflow-x: auto; }
 }
+
+/* expandable sets */
+.tab-expand {
+  font: inherit; font-size: 16px; line-height: 1; width: 26px; height: 26px; border-radius: 50%;
+  border: 0; background: var(--bone); color: var(--ink); cursor: pointer;
+}
+.tab-expand:hover { background: var(--hairline); }
+.tab-table tr.is-open td { background: var(--paper); }
+.tab-dirs { display: inline-flex; align-items: baseline; gap: 8px; }
+.tab-dirs small { color: var(--slate); font-size: var(--t-xs); letter-spacing: 0.04em; }
+.tab-sets-row td { padding-top: 0; background: var(--paper); }
+.tab-sets { width: 100%; border-collapse: collapse; margin: 0 0 var(--s3); font-size: var(--t-xs); }
+.tab-sets th { text-align: left; color: var(--slate); font-weight: 600; padding: 6px 8px; }
+.tab-sets td { padding: 6px 8px; border-top: 1px solid var(--bone); background: var(--surface) !important; }
+.tab-sets td.flex { color: var(--flex-ink); font-weight: 600; }
+.tab-sets td.ext { color: var(--ext-ink); font-weight: 600; }
+.tab-table th:first-child, .tab-table td:first-child { width: 36px; }
+
+/* health check results */
+.hc-actions { display: flex; gap: var(--s2); }
+.hc-label { margin-left: 10px; font-size: var(--t-xs); font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill); vertical-align: middle; }
+.hc-label--healthy { background: var(--flex-wash); color: var(--flex-ink); }
+.hc-label--recovering { background: var(--signal-wash); color: var(--signal-ink); }
+.hc-label--incomplete { background: var(--bone); color: var(--slate); }
+.hc-results td { font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: top; }
+.hc-results th { vertical-align: bottom; }
+.hc-results th small { font-weight: 400; }
+.hc-results .flex { color: var(--flex-ink); font-weight: 600; }
+.hc-results .ext { color: var(--ext-ink); font-weight: 600; }
+.hc-results th:first-child, .hc-results td:first-child { width: auto; }
+.hc-results tr.is-partial td { color: var(--slate); }
+.hc-band { font-size: var(--t-xs); font-weight: 600; padding: 2px 8px; border-radius: var(--r-pill); background: var(--bone); }
+.hc-band--matches { background: var(--flex-wash); color: var(--flex-ink); }
+.hc-band--functional { background: var(--signal-wash); color: var(--signal-ink); }
+.hc-band--below { background: var(--ink); color: var(--surface); }
+.hc-results { display: block; overflow-x: auto; }

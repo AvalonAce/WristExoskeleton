@@ -4,7 +4,7 @@
 //   3 Calibrate  neutral -> start pose -> one test movement (learns the sensor sign)
 // Used for the first set (Start session) and every later set (Next set).
 import { useEffect, useRef, useState } from 'react';
-import { Calib, modeDir, type Patient, type SetMode } from '../data';
+import { Calib, modeDir, type Patient, type SetMode, type Side } from '../data';
 import { runCalibStep, setModeConfirmed, type StepResult } from '../hooks/exoCommands';
 import { useSensorChecks } from '../hooks/useSensorChecks';
 import { useWristState } from '../hooks/useWristState';
@@ -42,11 +42,21 @@ export interface SetStart {
   notes: string;
 }
 
+/** Health Check blocks: direction, spring and wrist are set by the protocol, not chosen. */
+export interface FixedSet {
+  mode: SetMode;
+  spring: number;
+  side: Side;
+  title: string;      // dialog title, e.g. "Block 1 of 4: left wrist, flexion"
+  startLabel: string; // final button, e.g. "Start range test"
+}
+
 interface Props {
   patient: Patient;
+  fixed?: FixedSet;
   setNumber: number; // 1 for the first set
   defaultMode: SetMode;
-  defaultSpring: number;
+  springDefault: (m: SetMode) => number; // the profile's spring for a direction
   onCancel: () => void;
   onStart: (s: SetStart) => Promise<void>;
 }
@@ -60,11 +70,13 @@ const PROBLEM: Record<Exclude<StepResult, { ok: true }>['reason'], string> = {
   'too-small': 'The movement was too small. Move a little further, then try again.',
 };
 
-export default function SetSetupFlow({ patient, setNumber, defaultMode, defaultSpring, onCancel, onStart }: Props) {
-  const first = setNumber === 1;
+export default function SetSetupFlow({ patient, fixed, setNumber, defaultMode, springDefault, onCancel, onStart }: Props) {
+  const first = setNumber === 1 && !fixed;
+  const side = fixed?.side ?? patient.side;
   const [step, setStep] = useState(0);
-  const [mode, setMode] = useState<SetMode>(defaultMode);
-  const [spring, setSpring] = useState(defaultSpring);
+  const [mode, setMode] = useState<SetMode>(fixed?.mode ?? defaultMode);
+  const [spring, setSpring] = useState(() => fixed?.spring ?? springDefault(defaultMode));
+  const [springTouched, setSpringTouched] = useState(false);
   const [notes, setNotes] = useState('');
   const [cal, setCal] = useState<Record<CalId, CalState>>({ neutral: 'todo', start: 'todo', test_move: 'todo' });
   const [problem, setProblem] = useState<Partial<Record<CalId, string>>>({});
@@ -149,7 +161,7 @@ export default function SetSetupFlow({ patient, setNumber, defaultMode, defaultS
             setBusy(true);
             await onStart({ mode, springSetting: spring, startDeg: startDeg ?? 0, notes });
           }}>
-          {busy ? 'Starting' : first ? 'Start recording' : `Start set ${setNumber}`}
+          {busy ? 'Starting' : fixed ? fixed.startLabel : first ? 'Start recording' : `Start set ${setNumber}`}
         </button>
       )}
     </>
@@ -164,7 +176,7 @@ export default function SetSetupFlow({ patient, setNumber, defaultMode, defaultS
   }, [step, checks.allReady]);
 
   return (
-    <Dialog title={first ? `Start session for ${patient.displayName}` : `Set ${setNumber}`} onClose={onCancel}
+    <Dialog title={fixed ? fixed.title : first ? `Start session for ${patient.displayName}` : `Set ${setNumber}`} onClose={onCancel}
       locked={busy || running} footer={footer} width={600}>
       <ol className="ssf-steps" aria-label="Steps">
         {STEPS.map((s, i) => (
@@ -174,27 +186,38 @@ export default function SetSetupFlow({ patient, setNumber, defaultMode, defaultS
         ))}
       </ol>
 
-      {step === 0 && (
+      {step === 0 && fixed && (
+        <div className="ssf-pane">
+          <p className="sts-live"><span className={`sts-chip sts-chip--${mode}`}>{g.title}</span>
+            {side === 'R' ? 'Right' : 'Left'} wrist, spring setting {spring}</p>
+          <p className="ssf-lead">{g.fit} Put it on the <strong>{side === 'R' ? 'right' : 'left'} wrist</strong> and
+            set the spring to <strong>{spring}</strong>.</p>
+          <p className="ssf-lead">{g.start}</p>
+        </div>
+      )}
+
+      {step === 0 && !fixed && (
         <div className="ssf-pane">
           <div className="pf-field">
             <span className="ssf-label">Which direction is this set?</span>
             <div className="seg seg--wide sts-dir" role="radiogroup">
               {(['flexion', 'extension'] as SetMode[]).map((m) => (
                 <button type="button" key={m} role="radio" aria-checked={mode === m}
-                  className={`${mode === m ? 'is-on' : ''} sts-dir--${m}`} onClick={() => setMode(m)}>
+                  className={`${mode === m ? 'is-on' : ''} sts-dir--${m}`}
+                  onClick={() => { setMode(m); if (!springTouched) setSpring(springDefault(m)); }}>
                   <strong>{GUIDE[m].title}</strong>
                   <small>{m === 'flexion' ? 'Starts bent back, works by bending forward' : 'Starts bent forward, works by lifting back'}</small>
                 </button>
               ))}
             </div>
           </div>
-          <p className="ssf-lead">{g.fit} Put it on the patient's <strong>{patient.side === 'R' ? 'right' : 'left'} wrist</strong>.</p>
+          <p className="ssf-lead">{g.fit} Put it on the patient's <strong>{side === 'R' ? 'right' : 'left'} wrist</strong>.</p>
           <div className="pf-field">
             <span className="ssf-label">Spring setting for this set</span>
             <div className="seg seg--wide" role="radiogroup">
               {[1, 2, 3].map((n) => (
                 <button type="button" key={n} role="radio" aria-checked={spring === n}
-                  className={spring === n ? 'is-on' : ''} onClick={() => setSpring(n)}>
+                  className={spring === n ? 'is-on' : ''} onClick={() => { setSpring(n); setSpringTouched(true); }}>
                   <strong>{n}</strong><small>{maxTorque(n).toFixed(2)} N·m at 60°</small>
                 </button>
               ))}

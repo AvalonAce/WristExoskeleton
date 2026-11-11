@@ -2,6 +2,11 @@
 .ra svg { display: block; width: 100%; height: auto; overflow: visible; }
 
 .ra-track { fill: none; stroke: var(--hairline); stroke-width: 14; stroke-linecap: round; }
+.ra-track--idle { opacity: 0.35; }
+.ra-track--work { stroke: var(--hairline); }
+.ra-start-tick { stroke: var(--slate); stroke-width: 3; stroke-linecap: round; }
+.ra-start-label { fill: var(--slate); font-size: 12px; font-weight: 600; }
+.ra-moved { fill: var(--slate); font-size: 14px; }
 .ra-tick { stroke: var(--hairline); stroke-width: 1.5; }
 .ra-tick--major { stroke: var(--slate); }
 .ra-label { fill: var(--slate); font-size: 12px; }

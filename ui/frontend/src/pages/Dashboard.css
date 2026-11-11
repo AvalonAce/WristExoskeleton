@@ -105,6 +105,8 @@
 .dial-key i { display: inline-block; width: 3px; height: 14px; border-radius: 2px; }
 .k-goal { background: var(--ink); }
 .k-max { background: repeating-linear-gradient(var(--flex) 0 3px, transparent 3px 6px); }
+.k-max--ext { background: repeating-linear-gradient(var(--ext) 0 3px, transparent 3px 6px); }
+.k-start { background: var(--slate); width: 4px !important; }
 
 .stat { display: flex; flex-direction: column; }
 .stat-v { font-size: var(--t-2xl); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }

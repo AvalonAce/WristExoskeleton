@@ -41,14 +41,15 @@ export default function AddPatientFlow({ defaults, onCancel, onCreate }: Props) 
   const footer = step === 0 ? (
     <>
       {!allLive && <span className="ssf-hint spacer">Not every sensor is sending data yet.</span>}
-      <button className={`btn btn--quiet ${allLive ? 'spacer' : ''}`} onClick={onCancel}>Cancel</button>
-      <button className="btn" onClick={() => setStep(1)}>{allLive ? 'Continue' : 'Continue anyway'}</button>
+      <button key="cancel0" type="button" className={`btn btn--quiet ${allLive ? 'spacer' : ''}`} onClick={onCancel}>Cancel</button>
+      {/* distinct keys: otherwise React reuses this element as "Create patient" and the same click submits the form */}
+      <button key="continue" type="button" className="btn" onClick={() => setStep(1)}>{allLive ? 'Continue' : 'Continue anyway'}</button>
     </>
   ) : (
     <>
-      <button className="btn btn--quiet spacer" onClick={() => setStep(0)}>Back</button>
-      <button className="btn btn--quiet" onClick={onCancel}>Cancel</button>
-      <button className="btn" type="submit" form="new-patient">Create patient</button>
+      <button key="back" type="button" className="btn btn--quiet spacer" onClick={() => setStep(0)}>Back</button>
+      <button key="cancel1" type="button" className="btn btn--quiet" onClick={onCancel}>Cancel</button>
+      <button key="create" className="btn" type="submit" form="new-patient">Create patient</button>
     </>
   );
 

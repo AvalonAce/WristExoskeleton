@@ -71,17 +71,20 @@ export default function PatientForm({ initial, submitLabel, onSubmit, onCancel, 
         </div>
       </fieldset>
 
-      <fieldset className="pf-field">
-        <legend>Spring setting</legend>
-        <div className="seg seg--wide" role="radiogroup">
-          {[1, 2, 3].map((n) => (
-            <button type="button" key={n} role="radio" aria-checked={p.springSetting === n}
-              className={p.springSetting === n ? 'is-on' : ''} onClick={() => set('springSetting', n)}>
-              <strong>{n}</strong><small>{maxTorque(n).toFixed(2)} N·m at 60°</small>
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      {([['springFlex', 'Flexion spring'], ['springExt', 'Extension spring']] as const).map(([k, label]) => (
+        <fieldset className="pf-field" key={k}>
+          <legend>{label}</legend>
+          <div className="seg seg--wide" role="radiogroup">
+            {[1, 2, 3].map((n) => (
+              <button type="button" key={n} role="radio" aria-checked={p[k] === n}
+                className={p[k] === n ? 'is-on' : ''} onClick={() => set(k, n)}>
+                <strong>{n}</strong><small>{maxTorque(n).toFixed(2)} N·m at 60°</small>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+      <p className="pf-hint">Default for each set direction; it can be changed when a set starts.</p>
 
       <div className="pf-row">
         <label className="pf-field">
